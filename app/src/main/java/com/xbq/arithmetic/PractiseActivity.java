@@ -15,13 +15,11 @@ import android.view.LayoutInflater;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.AdapterView;
 import android.widget.BaseAdapter;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.LinearLayout;
+import android.widget.ImageButton;
 import android.widget.ListView;
-import android.widget.SimpleAdapter;
 import android.widget.TextView;
 
 import com.xbq.Question;
@@ -41,7 +39,7 @@ public class PractiseActivity extends AppCompatActivity {
 
     private ListView listViewQuestions;
 
-    private List<QuestionItem> questionItemsList = new ArrayList<>();
+    private Map<Integer, QuestionItem> questionItemMap = new HashMap<>();
 
     private QuestionGenerator questionGenerator;
     private ArrayList<Question> questions;
@@ -51,6 +49,7 @@ public class PractiseActivity extends AppCompatActivity {
     private boolean isCompleted = false;
 
     private Map<Integer, String> answers = new HashMap<>();
+    private QuestionAdapter questionAdapter;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -61,6 +60,8 @@ public class PractiseActivity extends AppCompatActivity {
 
         TextView remainTime = findViewById(R.id.remainTime);
         Button buttonSubmit = findViewById(R.id.submit);
+        ImageButton redoImageButton = findViewById(R.id.redoImageButton);
+
 
         countDownTimer = new CountDownTimer(1000 * 60 * 10, 1) {
             @Override
@@ -79,10 +80,29 @@ public class PractiseActivity extends AppCompatActivity {
         };
 
         countDownTimer.start();
-        //初始化答题卡
-        for (int i = 0; i < ConfigConstants.MAX_QUESTION_NUM; i++) {
-            answers.put(i, "");
-        }
+        //初始化适配器
+        questionAdapter = new QuestionAdapter();
+        listViewQuestions.setAdapter(questionAdapter);
+
+
+        redoImageButton.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View view) {
+                AlertDialog.Builder confirmToRedo =
+                        new AlertDialog.Builder(PractiseActivity.this)
+                        .setTitle("确认重做吗？")
+                        .setMessage("测试正在进行中")
+                        .setNeutralButton("点错了", null)
+                        .setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                            @Override
+                            public void onClick(DialogInterface dialogInterface, int i) {
+                                generateQuestionList();
+                            }
+                        });
+                confirmToRedo.show();
+            }
+        });
+
 
         buttonSubmit.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -107,9 +127,10 @@ public class PractiseActivity extends AppCompatActivity {
     }
 
     class QuestionAdapter extends BaseAdapter {
+
         @Override
         public int getCount() {
-            return questionItemsList.size();
+            return questionItemMap.size();
         }
 
         @Override
@@ -125,6 +146,7 @@ public class PractiseActivity extends AppCompatActivity {
         @Override
         public View getView(int position, View convertView, ViewGroup viewGroup) {
             View view = null;
+
             if (convertView == null) {
                 Log.i("info:", "没有缓存，重新生成" + position);
                 LayoutInflater inflater = PractiseActivity.this.getLayoutInflater();
@@ -133,7 +155,7 @@ public class PractiseActivity extends AppCompatActivity {
                 Log.i("info:", "有缓存，不需要重新生成" + position);
                 view = convertView;
             }
-            QuestionItem q = questionItemsList.get(position);
+            QuestionItem q = questionItemMap.get(position);
 
             TextView serial = view.findViewById(R.id.serialNumber);
             serial.setText(String.valueOf(q.getQuestionSerial()));
@@ -149,9 +171,11 @@ public class PractiseActivity extends AppCompatActivity {
 
             class MyTextWatcher implements TextWatcher {
                 private EditText editText;
+
                 public MyTextWatcher(EditText editText1)  {
                     this.editText = editText1;
                 }
+
                 @Override
                 public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
 
@@ -164,19 +188,36 @@ public class PractiseActivity extends AppCompatActivity {
 
                 @Override
                 public void afterTextChanged(Editable editable) {
-                    if (editable != null) {
+                    if (editable != null && !editable.equals("")) {
                         int pos = (Integer) editText.getTag();
 
                         answers.put(pos, editable.toString());
+                        Log.i("" + pos,editable.toString());
                     }
                 }
             }
             editText.addTextChangedListener(new MyTextWatcher(editText));
+            //解决因EditText复用导致的数据显示问题
+            editText.setText(answers.get(position));
+            editText.clearFocus();
 
             return view;
         }
     }
-    private QuestionAdapter questionAdapter;
+
+    public void initAnswerSheet() {
+        //初始化答题卡
+        for (int i = 0; i < ConfigConstants.MAX_QUESTION_NUM; i++) {
+            answers.put(i, "");
+        }
+    }
+
+    public void initQuestionList() {
+        //清空问卷
+        for (int i = 0; i < ConfigConstants.MAX_QUESTION_NUM; i++) {
+            questionItemMap.put(i, null);
+        }
+    }
 
     public void generateAnswerList() {
         for (int i = 0; i < questions.size(); i++) {
@@ -184,29 +225,31 @@ public class PractiseActivity extends AppCompatActivity {
             questionItem.setQuestionDetail(questions.get(i).getDetail());
             questionItem.setQuestionSerial(i + 1);
             if (answers.get(i).equals(questions.get(i).getRightAnswer())) {
-                questionItem.setRightAnswer("√");
+                questionItem.setRightAnswer("✔️");
             } else {
-                questionItem.setRightAnswer("× 正确答案：" + questions.get(i).getRightAnswer());
+                questionItem.setRightAnswer("❌ 正确答案：" + questions.get(i).getRightAnswer());
             }
-            questionItemsList.set(i,questionItem);
+            questionItemMap.put(i,questionItem);
         }
         questionAdapter.notifyDataSetChanged();
     }
 
     public void generateQuestionList() {
         isCompleted = false;
-        questionAdapter = new QuestionAdapter();
+
         questionGenerator = new QuestionGenerator();
         questions = questionGenerator.generate();
+        initQuestionList();
+        initAnswerSheet();
 
         for (int i = 0; i < questions.size(); i++) {
             QuestionItem questionItem = new QuestionItem();
             questionItem.setQuestionDetail(questions.get(i).getDetail());
             questionItem.setQuestionSerial(i + 1);
             questionItem.setRightAnswer("");
-            questionItemsList.add(questionItem);
+            questionItemMap.put(i, questionItem);
         }
-        listViewQuestions.setAdapter(questionAdapter);
+        questionAdapter.notifyDataSetChanged();
         countDownTimer.start();
     }
 

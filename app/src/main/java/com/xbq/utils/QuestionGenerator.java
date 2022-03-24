@@ -45,10 +45,10 @@ class Ran {
                 operator = '-';
                 break;
             case 2:
-                operator = '*';
+                operator = '×';
                 break;
             case 3:
-                operator = '/';
+                operator = '÷';
                 break;
         }
         return operator;
@@ -154,17 +154,17 @@ class TreeNode {
                     return String.valueOf(Integer.parseInt(getLchild().getResult()) + Integer.parseInt(getRchild().getResult()));
                 case "-":
                     return String.valueOf(Integer.parseInt(getLchild().getResult()) - Integer.parseInt(getRchild().getResult()));
-                case "*":
+                case "×":
                     return String.valueOf(Integer.parseInt(getLchild().getResult()) * Integer.parseInt(getRchild().getResult()));
-                case "/":
+                case "÷":
                     if(getRchild().getResult().equals("0")){
-                        while(str.equals("/")){
+                        while(str.equals("÷")){
                             str = String.valueOf(Ran.getOperator());
                         }
                         return this.getResult();
                     }
                     else if(Integer.parseInt(getLchild().getResult()) % Integer.parseInt(getRchild().getResult()) != 0){
-                        while(str.equals("/")){
+                        while(str.equals("÷")){
                             str = String.valueOf(Ran.getOperator());
                         }
                         return this.getResult();
@@ -187,12 +187,12 @@ class TreeNode {
             //右子树如果有孩子，说明右子树是一个表达式，而不是数字节点。
             if(getRchild().hasChild()){
                 //判断左邻括号的运算符是否为'/'
-                if(str.equals("/")){
+                if(str.equals("÷")){
                     //获取右子树的表达式，保留括号
                     Rstr = getRchild().toString();
                 }
                 //判断左邻括号的运算符是否为'*'或'-'
-                else if(str.equals("*") || str.equals("-")){
+                else if(str.equals("×") || str.equals("-")){
                     //判断op是否为'+'或'-'
                     if(getRchild().str.equals("+") || getRchild().str.equals("-")){
                         Rstr = getRchild().toString();
@@ -212,7 +212,7 @@ class TreeNode {
             }
             //左子树的情况同右子树类似
             if(getLchild().hasChild()){
-                if(str.equals("*") || str.equals("/")){
+                if(str.equals("×") || str.equals("÷")){
                     if(getLchild().str.equals("+") || getLchild().str.equals("-")){
                         Lstr = getLchild().toString();
                     }
