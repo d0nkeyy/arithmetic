@@ -3,12 +3,18 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/Users/donkey_/AndroidStudioProjects/arithmetic/app/src/main/res/layout/activity_main.xml" value="0.2" />
+        <entry key="..\:/Users/donkey_/AndroidStudioProjects/arithmetic/app/src/main/res/layout/activity_archive.xml" value="0.24947916666666667" />
+        <entry key="..\:/Users/donkey_/AndroidStudioProjects/arithmetic/app/src/main/res/layout/activity_archive_detail.xml" value="0.11372847011144883" />
+        <entry key="..\:/Users/donkey_/AndroidStudioProjects/arithmetic/app/src/main/res/layout/activity_main.xml" value="0.1" />
         <entry key="..\:/Users/donkey_/AndroidStudioProjects/arithmetic/app/src/main/res/layout/activity_practise.xml" value="0.1" />
+        <entry key="..\:/Users/donkey_/AndroidStudioProjects/arithmetic/app/src/main/res/layout/activity_statistic.xml" value="0.1" />
+        <entry key="..\:/Users/donkey_/AndroidStudioProjects/arithmetic/app/src/main/res/layout/archive_list_item_view.xml" value="0.1" />
+        <entry key="..\:/Users/donkey_/AndroidStudioProjects/arithmetic/app/src/main/res/layout/date_spinner_item.xml" value="0.24947916666666667" />
         <entry key="..\:/Users/donkey_/AndroidStudioProjects/arithmetic/app/src/main/res/layout/menu_main.xml" value="0.23489583333333333" />
         <entry key="..\:/Users/donkey_/AndroidStudioProjects/arithmetic/app/src/main/res/layout/question_list_answer_item_view.xml" value="0.24947916666666667" />
         <entry key="..\:/Users/donkey_/AndroidStudioProjects/arithmetic/app/src/main/res/layout/question_list_item_view.xml" value="0.1" />
         <entry key="..\:/Users/donkey_/AndroidStudioProjects/arithmetic/app/src/main/res/menu/menu_main.xml" value="0.24947916666666667" />
+        <entry key="..\:/Users/donkey_/AndroidStudioProjects/arithmetic/app/src/main/res/menu/menu_practise_activity.xml" value="0.1140625" />
       </map>
     </option>
   </component>

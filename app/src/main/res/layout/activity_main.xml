@@ -25,27 +25,20 @@
             android:id="@+id/containsParentheses"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="onCheckboxClicked"
-            android:text="题中出现括号"
-            tools:ignore="OnClick" />
+            android:text="题中出现括号" />
         <CheckBox
             android:id="@+id/containProperFraction"
             android:layout_toEndOf="@+id/containsParentheses"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="onCheckboxClicked"
-            android:text="题中包含真分数"
-            tools:ignore="OnClick" />
+            android:text="题中包含真分数" />
 
         <CheckBox
             android:layout_toEndOf="@+id/containProperFraction"
-            android:enabled="false"
             android:id="@+id/startTimer"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:onClick="onCheckboxClicked"
-            android:text="开启计时器"
-            tools:ignore="OnClick" />
+            android:text="开启计时器" />
     </RelativeLayout>
     <LinearLayout
         android:layout_weight="4"

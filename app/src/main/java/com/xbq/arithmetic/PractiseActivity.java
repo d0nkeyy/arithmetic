@@ -6,21 +6,29 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
 import android.content.DialogInterface;
+import android.content.Intent;
+import android.media.Image;
 import android.os.Bundle;
 import android.os.CountDownTimer;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
 import android.view.LayoutInflater;
+import android.view.Menu;
+import android.view.MenuInflater;
+import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
 import android.widget.Button;
+import android.widget.CheckBox;
 import android.widget.EditText;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.ListView;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import com.xbq.Question;
 import com.xbq.utils.ConfigConstants;
@@ -28,6 +36,10 @@ import com.xbq.utils.QuestionGenerator;
 
 import org.w3c.dom.Text;
 
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
+import java.io.IOException;
+import java.net.Inet4Address;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -35,7 +47,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
-public class PractiseActivity extends AppCompatActivity {
+public class PractiseActivity extends AppCompatActivity implements View.OnClickListener{
 
     private ListView listViewQuestions;
 
@@ -50,18 +62,37 @@ public class PractiseActivity extends AppCompatActivity {
 
     private Map<Integer, String> answers = new HashMap<>();
     private QuestionAdapter questionAdapter;
+    private boolean isOpenTimer;
+
+    private TextView remainTime;
+
+    private  Button buttonSubmit;
+    private Button buttonStart;
+
+    private ImageButton redoImageButton;
+    private ImageButton archiveImageButton;
+
+    private CheckBox openTimer;
+
+    private int score = 0;//得分
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_practise);
+        setTitle("四则运算");
+
+        openTimer = findViewById(R.id.openTimer);
 
         listViewQuestions = findViewById(R.id.questionListView);
 
-        TextView remainTime = findViewById(R.id.remainTime);
-        Button buttonSubmit = findViewById(R.id.submit);
-        ImageButton redoImageButton = findViewById(R.id.redoImageButton);
+        remainTime = findViewById(R.id.remainTime);
 
+        buttonSubmit = findViewById(R.id.submitButton);
+        buttonStart = findViewById(R.id.startButton);
+
+        redoImageButton = findViewById(R.id.redoImageButton);
+        archiveImageButton = findViewById(R.id.archiveImageButton);
 
         countDownTimer = new CountDownTimer(1000 * 60 * 10, 1) {
             @Override
@@ -79,52 +110,127 @@ public class PractiseActivity extends AppCompatActivity {
             }
         };
 
-        countDownTimer.start();
+
+        redoImageButton.setOnClickListener(this);
+        archiveImageButton.setOnClickListener(this);
+        buttonSubmit.setOnClickListener(this);
+        buttonStart.setOnClickListener(this);
+    }
+
+    @Override
+    public void onClick(View view) {
+        switch (view.getId()) {
+            case R.id.redoImageButton:
+                onRedoImageButtonClicked();
+                break;
+            case R.id.archiveImageButton:
+                onArchiveImageButtonClicked();
+                break;
+            case R.id.startButton:
+                onStartButtonClicked();
+                break;
+            case R.id.submitButton:
+                onSubmitButtonClicked();
+                break;
+        }
+    }
+
+    public void onRedoImageButtonClicked() {
+        AlertDialog.Builder confirmToRedo =
+                new AlertDialog.Builder(PractiseActivity.this);
+        if (!isCompleted) {
+            if (isOpenTimer) {
+                confirmToRedo.setMessage("测试正在进行中");
+            }
+            confirmToRedo.setTitle("确认重做吗？")
+                    .setNeutralButton("点错了", null)
+                    .setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                        @Override
+                        public void onClick(DialogInterface dialogInterface, int i) {
+                            generateQuestionList();
+                        }
+                    });
+            confirmToRedo.show();
+        } else {
+            generateQuestionList();
+        }
+    }
+
+    public void onArchiveImageButtonClicked() {
+        if (!isCompleted) {
+            Toast.makeText(PractiseActivity.this, "未提交状态下不可存档", Toast.LENGTH_LONG).show();;
+        } else {
+            FileOutputStream fileOutputStream = null;
+            String string = score + "\n";
+            for (int i = 0; i < ConfigConstants.MAX_QUESTION_NUM; i++) {
+                string += questions.get(i).getDetail();
+                if (answers.get(i).equals(questions.get(i).getRightAnswer())) {
+                    string += questions.get(i).getRightAnswer();
+                    string += " ";
+                    string += "✔️";
+                } else {
+                    string += answers.get(i);
+                    string += " ";
+                    string += "❌ 正确答案：" + questions.get(i).getRightAnswer();
+                }
+                string += "\n";
+            }
+            try {
+                long currentTimeMillis = System.currentTimeMillis();
+                fileOutputStream = openFileOutput(currentTimeMillis + ".ar", MODE_PRIVATE);
+                fileOutputStream.write(string.getBytes());
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (fileOutputStream != null) {
+                    try {
+                        fileOutputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+            Toast.makeText(PractiseActivity.this, "本次训练已存档", Toast.LENGTH_SHORT).show();
+        }
+    }
+
+    public void onStartButtonClicked() {
+        isOpenTimer = openTimer.isChecked();
+        LinearLayout linearLayout1 = findViewById(R.id.first_page);
+        linearLayout1.setVisibility(View.GONE);
+        LinearLayout linearLayout2 = findViewById(R.id.second_page);
+        linearLayout2.setVisibility(View.VISIBLE);
+
+        if (isOpenTimer) {
+            countDownTimer.start();
+            remainTime.setVisibility(View.VISIBLE);
+        } else {
+            remainTime.setVisibility(View.GONE);
+        }
+
         //初始化适配器
         questionAdapter = new QuestionAdapter();
         listViewQuestions.setAdapter(questionAdapter);
-
-
-        redoImageButton.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                AlertDialog.Builder confirmToRedo =
-                        new AlertDialog.Builder(PractiseActivity.this)
-                        .setTitle("确认重做吗？")
-                        .setMessage("测试正在进行中")
-                        .setNeutralButton("点错了", null)
-                        .setPositiveButton("确认", new DialogInterface.OnClickListener() {
-                            @Override
-                            public void onClick(DialogInterface dialogInterface, int i) {
-                                generateQuestionList();
-                            }
-                        });
-                confirmToRedo.show();
-            }
-        });
-
-
-        buttonSubmit.setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                if (!isCompleted) {
-                    AlertDialog.Builder confirmToSubmitDialog =
-                            new AlertDialog.Builder(PractiseActivity.this)
-                                    .setTitle("确认提交吗？")
-                                    .setMessage("测试正在进行中")
-                                    .setNeutralButton("点错了", null)
-                                    .setPositiveButton("确认", new DialogInterface.OnClickListener() {
-                                        @Override
-                                        public void onClick(DialogInterface dialogInterface, int i) {
-                                            onComplete();
-                                        }
-                                    });
-                    confirmToSubmitDialog.show();
-                }
-            }
-        });
         generateQuestionList();
     }
+
+    public void onSubmitButtonClicked() {
+        if (!isCompleted) {
+            AlertDialog.Builder confirmToSubmitDialog =
+                    new AlertDialog.Builder(PractiseActivity.this)
+                            .setTitle("确认提交吗？")
+                            .setMessage("测试正在进行中")
+                            .setNeutralButton("点错了", null)
+                            .setPositiveButton("确认", new DialogInterface.OnClickListener() {
+                                @Override
+                                public void onClick(DialogInterface dialogInterface, int i) {
+                                    onComplete();
+                                }
+                            });
+            confirmToSubmitDialog.show();
+        }
+    }
+
 
     class QuestionAdapter extends BaseAdapter {
 
@@ -250,13 +356,17 @@ public class PractiseActivity extends AppCompatActivity {
             questionItemMap.put(i, questionItem);
         }
         questionAdapter.notifyDataSetChanged();
-        countDownTimer.start();
+        if (isOpenTimer) {
+            countDownTimer.start();
+        }
     }
 
     public void onComplete() {
         isCompleted = true;
-        countDownTimer.cancel();
-        int score = 0;
+        if (isOpenTimer) {
+            countDownTimer.cancel();
+        }
+        score = 0;
         for (int i = 0; i < questions.size(); i++) {
             if (answers.get(i).equals(questions.get(i).getRightAnswer())) {
                 score += 5;
@@ -289,7 +399,6 @@ public class PractiseActivity extends AppCompatActivity {
             AlertDialog.Builder backPressedWarning =
                     new AlertDialog.Builder(PractiseActivity.this)
                             .setTitle("确认返回吗？")
-                            .setMessage("测试正在进行中，退出后操作将不保存记录！")
                             .setPositiveButton("确认", new DialogInterface.OnClickListener() {
                                 @Override
                                 public void onClick(DialogInterface dialogInterface, int i) {
@@ -301,5 +410,50 @@ public class PractiseActivity extends AppCompatActivity {
         } else {
             finish();
         }
+    }
+
+
+    //设置菜单
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        MenuInflater inflater = getMenuInflater();
+        inflater.inflate(R.menu.menu_practise_activity, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+    //菜单的点击事件
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        // Handle item selection
+        switch (item.getItemId()) {
+            case R.id.archive:
+                gotoArchiveActivity();
+                return true;
+            case R.id.statistics:
+                gotoStatisticActivity();
+                return true;
+            case R.id.about:
+                showAbout();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
+        }
+    }
+
+    public void gotoStatisticActivity() {
+        Intent intent = new Intent(PractiseActivity.this, StatisticActivity.class);
+        startActivity(intent);
+    }
+
+    public void gotoArchiveActivity() {
+        Intent intent = new Intent(PractiseActivity.this, ArchiveActivity.class);
+        startActivity(intent);
+    }
+
+    public void showAbout() {
+        AlertDialog.Builder dialogAbout =
+                new AlertDialog.Builder(PractiseActivity.this)
+                        .setTitle("关于")
+                        .setMessage("By 谢本齐");
+        dialogAbout.show();
     }
 }

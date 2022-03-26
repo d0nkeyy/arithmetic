@@ -10,10 +10,16 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Arithmetic">
         <activity
-            android:name=".PractiseActivity"
+            android:name=".StatisticActivity"
             android:exported="false" />
         <activity
-            android:name=".MainActivity"
+            android:name=".ArchiveDetailActivity"
+            android:exported="false" />
+        <activity
+            android:name=".ArchiveActivity"
+            android:exported="false" />
+        <activity
+            android:name=".PractiseActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
